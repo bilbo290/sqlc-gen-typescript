@@ -32,6 +32,7 @@ import { Driver as Sqlite3Driver } from "./drivers/better-sqlite3";
 import { Driver as PgDriver } from "./drivers/pg";
 import { Driver as PostgresDriver } from "./drivers/postgres";
 import { Mysql2Options, Driver as MysqlDriver } from "./drivers/mysql2";
+import { Driver as D1Driver } from "./drivers/cloudflare-d1";
 
 // Read input from stdin
 const input = readInput();
@@ -92,6 +93,9 @@ function createNodeGenerator(options: Options): Driver {
     }
     case "better-sqlite3": {
       return new Sqlite3Driver();
+    }
+    case "cloudflare-d1": {
+      return new D1Driver();
     }
   }
   throw new Error(`unknown driver: ${options.driver}`);
