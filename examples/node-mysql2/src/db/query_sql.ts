@@ -9,11 +9,11 @@ SELECT id, name, bio FROM authors
 WHERE id = ? LIMIT 1`;
 
 export interface GetAuthorArgs {
-    id: string;
+    id: number;
 }
 
 export interface GetAuthorRow {
-    id: string;
+    id: number;
     name: string;
     bio: string | null;
 }
@@ -40,7 +40,7 @@ SELECT id, name, bio FROM authors
 ORDER BY name`;
 
 export interface ListAuthorsRow {
-    id: string;
+    id: number;
     name: string;
     bio: string | null;
 }
@@ -104,7 +104,7 @@ DELETE FROM authors
 WHERE id = ?`;
 
 export interface DeleteAuthorArgs {
-    id: string;
+    id: number;
 }
 
 export async function deleteAuthor(client: Client, args: DeleteAuthorArgs): Promise<void> {
@@ -127,8 +127,8 @@ export interface TestRow {
     cMediumint: number | null;
     cInt: number | null;
     cInteger: number | null;
-    cBigint: string | null;
-    cSerial: string;
+    cBigint: number | null;
+    cSerial: number;
     cDecimal: string | null;
     cDec: string | null;
     cNumeric: string | null;

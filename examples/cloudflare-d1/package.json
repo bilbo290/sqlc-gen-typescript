@@ -1,0 +1,22 @@
+{
+  "name": "cloudflare-d1-example",
+  "version": "1.0.0",
+  "description": "Example of multi-tenancy with Cloudflare D1 and sqlc-gen-typescript",
+  "main": "src/main.ts",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "cloudflare",
+    "d1",
+    "sqlc",
+    "multi-tenancy"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.2.2"
+  }
+}

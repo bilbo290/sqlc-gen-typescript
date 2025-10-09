@@ -28,7 +28,8 @@ sql:
 
 - PostgreSQL via [pg](https://www.npmjs.com/package/pg) or [postgres](https://www.npmjs.com/package/postgres).
 - MySQL via [mysql2](https://www.npmjs.com/package/mysql2).
-- SQLite via [sqlite3](https://www.npmjs.com/package/better-sqlite3).
+- SQLite via [better-sqlite3](https://www.npmjs.com/package/better-sqlite3).
+- Cloudflare D1 via [D1 HTTP API](https://developers.cloudflare.com/api/resources/d1/) with built-in database management for multi-tenancy.
 
 ## Getting started
 
@@ -333,6 +334,117 @@ sql:
       runtime: node
       driver: better-sqlite3 # npm package name
 ```
+
+### Cloudflare D1 (Beta)
+
+```yaml
+version: '2'
+plugins:
+- name: ts
+  wasm:
+    url: https://downloads.sqlc.dev/plugin/sqlc-gen-typescript_0.1.3.wasm
+    sha256: 287df8f6cc06377d67ad5ba02c9e0f00c585509881434d15ea8bd9fc751a9368
+sql:
+- schema: "schema.sql"
+  queries: "query.sql"
+  engine: sqlite
+  codegen:
+  - out: db
+    plugin: ts
+    options:
+      runtime: cloudflare
+      driver: cloudflare-d1
+```
+
+#### D1 Database Management for Multi-Tenancy
+
+The `cloudflare-d1` driver automatically generates D1 database management functions alongside your query code, making it easy to implement multi-tenancy patterns.
+
+**Generated Management Functions:**
+- `createDatabase(client, request)` - Create a new D1 database
+- `deleteDatabase(client, databaseId)` - Delete a D1 database
+- `updateDatabase(client, databaseId, request)` - Update database name
+- `listDatabases(client, options?)` - List all databases with pagination
+- `getDatabase(client, databaseId)` - Get database details
+
+**Example: Multi-Tenant Application**
+
+```typescript
+import {
+  D1HttpClient,
+  createDatabase,
+  listDatabases,
+  getDatabase,
+  deleteDatabase,
+  // Your generated query functions
+  createAuthor,
+  listAuthors
+} from "./db/query_sql";
+
+// Initialize the client with your Cloudflare credentials
+const client: D1HttpClient = {
+  accountId: "your-account-id",
+  apiToken: "your-api-token",
+  databaseId: "", // Will be set per-tenant
+};
+
+// Create a new tenant database
+async function createTenant(tenantName: string) {
+  const database = await createDatabase(client, {
+    name: `tenant-${tenantName}`,
+    primary_location_hint: "wnam" // Optional: Western North America
+  });
+
+  console.log(`Created database: ${database.uuid}`);
+  return database.uuid;
+}
+
+// List all tenant databases
+async function listTenants() {
+  const databases = await listDatabases(client, {
+    per_page: 100,
+    page: 1
+  });
+
+  return databases.map(db => ({
+    id: db.uuid,
+    name: db.name,
+    created: db.created_at
+  }));
+}
+
+// Use tenant-specific database
+async function useTenantDatabase(tenantDatabaseId: string) {
+  // Create a new client for this tenant
+  const tenantClient = {
+    ...client,
+    databaseId: tenantDatabaseId
+  };
+
+  // Now use your generated query functions with this tenant's database
+  await createAuthor(tenantClient, {
+    name: "Alice",
+    bio: "Software Engineer"
+  });
+
+  const authors = await listAuthors(tenantClient);
+  console.log(authors);
+}
+
+// Clean up tenant database
+async function deleteTenant(databaseId: string) {
+  await deleteDatabase(client, databaseId);
+  console.log(`Deleted database: ${databaseId}`);
+}
+```
+
+**Multi-Tenancy Best Practices:**
+
+1. **Database Per Tenant**: Create a separate D1 database for each tenant
+2. **Client Management**: Store tenant database IDs and create isolated clients
+3. **Query Isolation**: Always use the tenant-specific client for queries
+4. **Resource Limits**: Monitor database count and usage per account
+5. **Naming Convention**: Use consistent naming like `tenant-{id}` or `org-{name}`
 
 ## Development
 
